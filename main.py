@@ -1,11 +1,5 @@
 from loguru import logger
-from build_benchmark import setup_benchmark_environment
-
-
-def main():
-    logger.info("Starting benchmark environment setup...")
-    setup_benchmark_environment()
-
+from build_benchmark import setup_benchmark_environment, create_specialized_benchmark
 
 OPTIONS = {
     "n",
@@ -48,6 +42,12 @@ def get_list_combination(
         f"Recursing with options_set_copy={options_set_copy} and li_combinations={li_combinations}"
     )
     return get_list_combination(options_set_copy, li_combinations)
+
+
+def main():
+    logger.info("Starting benchmark environment setup...")
+    setup_benchmark_environment()
+    create_specialized_benchmark({"n", "p", "f"})
 
 
 if __name__ == "__main__":

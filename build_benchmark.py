@@ -259,5 +259,5 @@ def create_specialized_benchmark(options: set[str]) -> None:
 
 
 if __name__ == "__main__":
-    # setup_benchmark_environment()
-    create_specialized_benchmark({"n", "p", "f"})
+    setup_benchmark_environment()
+    # create_specialized_benchmark({"n", "p", "f"})
