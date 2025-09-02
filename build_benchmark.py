@@ -102,7 +102,9 @@ def show_mat_content(path_mat_file: str) -> None:
 
 
 def export_GT_py(
-    mat_folder: str, path_destination_folder: str = path_benchmark_folder
+    mat_folder: str,
+    path_destination_folder: str = path_benchmark_folder,
+    with_makefile: bool = True,
 ) -> None:
     """
     Mimics the MATLAB export_GT.m functionality:
@@ -134,6 +136,19 @@ def export_GT_py(
     logger.info(
         f"Exported {len(mat_files)} ground truth files to {path_destination_folder}"
     )
+
+    if not with_makefile:
+        logger.info("Skipping Makefile copy.")
+        return None
+
+    logger.info("Copying Makefile to benchmark folder.")
+    makefile_src = os.path.join(path_current_folder, "Makefile")
+    makefile_dst = os.path.join(path_destination_folder, "Makefile")
+    if os.path.isfile(makefile_src):
+        shutil.copy(makefile_src, makefile_dst)
+        logger.info(f"Copied Makefile to {makefile_dst}")
+    else:
+        logger.warning(f"Makefile not found in {path_current_folder}")
 
 
 def extract_images_from_dataset_folders(

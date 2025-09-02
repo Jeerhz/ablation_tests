@@ -1,3 +1,4 @@
+# Original MakeFile inside benchmark folder
 # Prerequisite Unix tools: ls, wc, echo, cut, bc
 LSD ?= ../Build/muLSD
 COMPARE ?= ../Build/compare_lines

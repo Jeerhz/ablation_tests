@@ -1,3 +1,4 @@
+import os
 from loguru import logger
 from build_benchmark import setup_benchmark_environment, create_specialized_benchmark
 
@@ -42,6 +43,19 @@ def get_list_combination(
         f"Recursing with options_set_copy={options_set_copy} and li_combinations={li_combinations}"
     )
     return get_list_combination(options_set_copy, li_combinations)
+
+
+def run_benchmark(path_benchmark: str) -> None:
+    # Here you would add the code to run your benchmark
+    if not os.path.isdir(path_benchmark):
+        logger.error(
+            f"Benchmark folder does not exist: {path_benchmark}. Please run setup and create the benchmark."
+        )
+        return None
+
+    # Here you would add the code to run your benchmark
+
+    logger.info("Benchmark completed.")
 
 
 def main():
