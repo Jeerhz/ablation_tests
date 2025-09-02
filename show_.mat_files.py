@@ -1,3 +1,6 @@
+# This script assumes that downloading the YorkUrban-LineSegment returns a
+# folder named 'LineSegmentAnnotation' in the current directory.
+
 import os
 from pathlib import Path
 from scipy.io import loadmat
@@ -12,6 +15,7 @@ import zipfile
 current_folder_path: str = os.path.abspath(os.getcwd())
 
 
+# see https://stackoverflow.com/questions/43515481/python-how-to-move-list-of-folders-with-subfolders-to-a-new-directory
 def move_folder(origine_path: str, destination_path: str) -> None:
     try:
         shutil.move(origine_path, destination_path)
@@ -94,7 +98,15 @@ def export_GT_py(mat_folder: str) -> None:
     Mimics the MATLAB export_GT.m functionality:
     For each 'P*_GND.mat' file in mat_folder, loads 'line_gnd' and writes it to a '_gt.txt' file.
     """
-    mat_files = glob.glob(os.path.join(mat_folder, "P*_GND.mat"))
+    path_benchmark_folder: str = str(Path(current_folder_path) / Path("benchmark"))
+
+    if os.path.isdir(path_benchmark_folder):
+        logger.warning("Benchmark folder already exists.")
+        return None
+    else:
+        os.mkdir(path_benchmark_folder)
+
+    mat_files: list[str] = glob.glob(os.path.join(mat_folder, "P*_GND.mat"))
     logger.info(f"Matched {len(mat_files)} files: \n {mat_files[0:5]}")
     for mat_file in mat_files:
         mat_data = load_mat_content(mat_file)
@@ -102,8 +114,9 @@ def export_GT_py(mat_folder: str) -> None:
             logger.warning(f"'line_gnd' not found in {mat_file}")
             continue
         line_gnd = mat_data["line_gnd"]
+
         txt_filename = os.path.join(
-            mat_folder, f"{os.path.basename(mat_file)[:8]}_gt.txt"
+            path_benchmark_folder, f"{os.path.basename(mat_file)[:8]}_gt.txt"
         )
         np.savetxt(txt_filename, line_gnd, fmt="%.6f", delimiter=" ")
         logger.info(f"Exported {txt_filename}")
