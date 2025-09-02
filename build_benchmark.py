@@ -144,10 +144,10 @@ def extract_images_from_dataset_folders(
     Extract images from dataset folders and save them to a benchmark folder.
     """
     if os.path.isdir(destination_path):
-        logger.info("Benchmark folder already exists.")
+        logger.info("Images folder already exists.")
         jpg_files = glob.glob(os.path.join(destination_path, "*.jpg"))
         if len(jpg_files) == 102:
-            logger.info("Benchmark folder contains 102 .jpg files. Returning None.")
+            logger.info("Images folder contains 102 .jpg files. Returning None.")
             return None
     else:
         os.mkdir(destination_path)
