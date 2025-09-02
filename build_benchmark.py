@@ -255,6 +255,32 @@ def setup_benchmark_environment() -> None:
     clean_working_directory()
 
 
+def modify_makefile_for_options(benchmark_folder: str, options: set[str]) -> None:
+    """
+    Modifie le Makefile pour passer les options au script C++.
+    """
+    makefile_path = os.path.join(benchmark_folder, "Makefile")
+    if not os.path.isfile(makefile_path):
+        logger.error(f"Makefile not found in {benchmark_folder}")
+        return
+
+    # Lire le Makefile
+    with open(makefile_path, "r") as f:
+        lines = f.readlines()
+
+    # Trouver la ligne LSD ?= et la modifier
+    for i, line in enumerate(lines):
+        if line.startswith("LSD ?="):
+            options_str = " ".join([f"-{opt}" for opt in sorted(options)])
+            lines[i] = f"LSD ?= ../Build/muLSD {options_str}\n"
+            break
+
+    # Écrire le Makefile modifié
+    with open(makefile_path, "w") as f:
+        f.writelines(lines)
+    logger.info(f"Makefile modified for options: {options}")
+
+
 def create_specialized_benchmark(options: set[str]) -> None:
     """
     Create a specialized benchmark folder based on the provided options.
@@ -270,6 +296,8 @@ def create_specialized_benchmark(options: set[str]) -> None:
         dirs_exist_ok=True,
         symlinks=True,
     )
+
+    modify_makefile_for_options(specialized_benchmark_folder, options)
     logger.info(f"Created specialized benchmark folder: {specialized_benchmark_folder}")
 
 

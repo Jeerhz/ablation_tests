@@ -1,3 +1,5 @@
 .venv
 .mypy_cache
 uv.lock
+benchmark_*
+__pycache__
