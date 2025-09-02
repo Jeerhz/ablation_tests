@@ -91,9 +91,6 @@ def load_mat_content(
 def show_mat_content(path_mat_file: str) -> None:
     """
     Load and display the content of a .mat file using scipy, logging the output with loguru.
-
-    Args:
-        path_mat_file (str): Path to the .mat file.
     """
     mat_data = load_mat_content(path_mat_file=path_mat_file)
     if mat_data is None:
@@ -103,15 +100,22 @@ def show_mat_content(path_mat_file: str) -> None:
     logger.info(f"Contents of '{path_mat_file}':\n{mat_data}")
 
 
-def export_GT_py(mat_folder: str) -> None:
+def export_GT_py(
+    mat_folder: str, path_destination_folder: str = path_benchmark_folder
+) -> None:
     """
     Mimics the MATLAB export_GT.m functionality:
     For each 'P*_GND.mat' file in mat_folder, loads 'line_gnd' and writes it to a '_gt.txt' file.
     """
-    if os.path.isdir(path_benchmark_folder):
-        logger.warning("Benchmark folder already exists.")
+    if os.path.isdir(path_destination_folder):
+        logger.info("Benchmark folder already exists.")
+        # Check if benchmark folder contains .txt files
+        txt_files = glob.glob(os.path.join(path_destination_folder, "*.txt"))
+        if len(txt_files) == 102:
+            logger.info("Benchmark folder contains 102 .txt files. Returning None.")
+            return None
     else:
-        os.mkdir(path_benchmark_folder)
+        os.mkdir(path_destination_folder)
 
     mat_files: list[str] = glob.glob(os.path.join(mat_folder, "P*_GND.mat"))
     logger.info(f"Matched {len(mat_files)} files: \n {mat_files[0:5]}")
@@ -123,7 +127,7 @@ def export_GT_py(mat_folder: str) -> None:
         line_gnd = mat_data["line_gnd"]
 
         txt_filename = os.path.join(
-            path_benchmark_folder, f"{os.path.basename(mat_file)[:8]}_gt.txt"
+            path_destination_folder, f"{os.path.basename(mat_file)[:8]}_gt.txt"
         )
         np.savetxt(txt_filename, line_gnd, fmt="%.6f", delimiter=" ")
         logger.info(f"Exported {txt_filename}")
@@ -131,14 +135,19 @@ def export_GT_py(mat_folder: str) -> None:
 
 def extract_images_from_dataset_folders(
     containing_folder_path: str = current_folder_path,
+    destination_path: str = path_benchmark_folder,
 ) -> None:
     """
     Extract images from dataset folders and save them to a benchmark folder.
     """
-    if os.path.isdir(path_benchmark_folder):
-        logger.warning("Benchmark folder already exists.")
+    if os.path.isdir(destination_path):
+        logger.info("Benchmark folder already exists.")
+        jpg_files = glob.glob(os.path.join(destination_path, "*.jpg"))
+        if len(jpg_files) == 102:
+            logger.info("Benchmark folder contains 102 .jpg files. Returning None.")
+            return None
     else:
-        os.mkdir(path_benchmark_folder)
+        os.mkdir(destination_path)
 
     # Get all image path
     images_files = glob.glob(
@@ -150,12 +159,13 @@ def extract_images_from_dataset_folders(
 
     # Move all image files in benchmark folder
     for image_file in images_files:
-        shutil.copy(image_file, path_benchmark_folder)
-        logger.info(f"Moved image to benchmark folder: {image_file}")
+        shutil.copy(image_file, destination_path)
+    logger.info(f"Moved all images to benchmark folder: {destination_path}")
 
 
 def clean_working_directory() -> None:
     """
+    Delete downloaded dataset to only keep benchmark files, ie,
     Delete folder LineSegmentAnnotation and all folders called 'P*', plus some specific files/folders.
     """
     # Folders to remove (wildcards and explicit names)
@@ -166,7 +176,7 @@ def clean_working_directory() -> None:
     ]
     for folder_path in folders_to_remove:
         shutil.rmtree(folder_path, ignore_errors=True)
-        logger.info(f"Cleaned working directory: {folder_path}")
+    logger.info("Cleaned working directory from folders to remove")
 
     # Files to remove
     files_to_remove = [
@@ -180,6 +190,25 @@ def clean_working_directory() -> None:
             logger.info(f"Cleaned working directory: {file_name}")
         except FileNotFoundError:
             pass
+
+
+def simlink_images_to_folder(
+    path_images_folder: str, path_destination_folder: str
+) -> None:
+    """
+    Create a symlink to the images folder in the destination directory.
+    """
+    if os.path.isdir(path_destination_folder):
+        logger.info(f"Destination folder already exists: {path_destination_folder}")
+        return None
+
+    try:
+        os.symlink(path_images_folder, path_destination_folder)
+        logger.info(
+            f"Created symlink from {path_images_folder} to {path_destination_folder}"
+        )
+    except Exception as e:
+        logger.error(f"Failed to create symlink: {e}")
 
 
 if __name__ == "__main__":
