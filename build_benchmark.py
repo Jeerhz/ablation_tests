@@ -224,7 +224,12 @@ def symlink_images_to_folder(
     logger.info(f"Symlinked {len(image_files)} images to {path_destination_folder}")
 
 
-if __name__ == "__main__":
+def setup_benchmark_environment() -> None:
+    """
+    Set up the benchmark environment by creating necessary directories and files.
+    """
+    os.makedirs(path_benchmark_folder, exist_ok=True)
+    logger.info(f"Created benchmark folder: {path_benchmark_folder}")
     download_york_urban_dataset()
     export_GT_py(str(Path(path_current_folder) / "LineSegmentAnnotation"))
     extract_images_from_dataset_folders(destination_path=path_images_folder)
@@ -233,9 +238,26 @@ if __name__ == "__main__":
         path_destination_folder=path_benchmark_folder,
     )
     clean_working_directory()
-    # shutil.copytree(
-    #     src=path_benchmark_folder,
-    #     dst=str(Path(path_current_folder) / Path("benchmark_copy")),
-    #     dirs_exist_ok=True,
-    #     symlinks=True,
-    # )
+
+
+def create_specialized_benchmark(options: set[str]) -> None:
+    """
+    Create a specialized benchmark folder based on the provided options.
+    This is where we will run and store MuLSD results on benchmark
+    """
+    options_string: str = "".join(sorted(options))
+    specialized_benchmark_folder: str = str(
+        Path(path_current_folder) / Path(f"benchmark_{options_string}")
+    )
+    shutil.copytree(
+        src=path_benchmark_folder,
+        dst=specialized_benchmark_folder,
+        dirs_exist_ok=True,
+        symlinks=True,
+    )
+    logger.info(f"Created specialized benchmark folder: {specialized_benchmark_folder}")
+
+
+if __name__ == "__main__":
+    # setup_benchmark_environment()
+    create_specialized_benchmark({"n", "p", "f"})
