@@ -11,8 +11,10 @@ import shutil
 import glob
 import requests
 import zipfile
+from tqdm import tqdm
 
 current_folder_path: str = os.path.abspath(os.getcwd())
+path_benchmark_folder: str = str(Path(current_folder_path) / Path("benchmark"))
 
 
 # see https://stackoverflow.com/questions/43515481/python-how-to-move-list-of-folders-with-subfolders-to-a-new-directory
@@ -39,9 +41,17 @@ def download_york_urban_dataset() -> None:
     try:
         response = requests.get(url, stream=True)
         response.raise_for_status()
-        with open(local_zip_path, "wb") as f:
+        total_size = int(response.headers.get("content-length", 0))
+        with (
+            open(local_zip_path, "wb") as f,
+            tqdm(
+                total=total_size, unit="B", unit_scale=True, desc="Downloading"
+            ) as pbar,
+        ):
             for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
+                if chunk:
+                    f.write(chunk)
+                    pbar.update(len(chunk))
         logger.info(f"Downloaded zip file to {local_zip_path}")
 
         # Extract the zip file
@@ -98,11 +108,8 @@ def export_GT_py(mat_folder: str) -> None:
     Mimics the MATLAB export_GT.m functionality:
     For each 'P*_GND.mat' file in mat_folder, loads 'line_gnd' and writes it to a '_gt.txt' file.
     """
-    path_benchmark_folder: str = str(Path(current_folder_path) / Path("benchmark"))
-
     if os.path.isdir(path_benchmark_folder):
         logger.warning("Benchmark folder already exists.")
-        return None
     else:
         os.mkdir(path_benchmark_folder)
 
@@ -122,14 +129,61 @@ def export_GT_py(mat_folder: str) -> None:
         logger.info(f"Exported {txt_filename}")
 
 
-# Example usage:
-download_york_urban_dataset()
-export_GT_py(str(Path(current_folder_path) / "LineSegmentAnnotation"))
+def extract_images_from_dataset_folders(
+    containing_folder_path: str = current_folder_path,
+) -> None:
+    """
+    Extract images from dataset folders and save them to a benchmark folder.
+    """
+    if os.path.isdir(path_benchmark_folder):
+        logger.warning("Benchmark folder already exists.")
+    else:
+        os.mkdir(path_benchmark_folder)
+
+    # Get all image path
+    images_files = glob.glob(
+        os.path.join(containing_folder_path, "P*", "*.jpg"), recursive=True
+    )
+    if not images_files:
+        logger.warning("No images found.")
+        return None
+
+    # Move all image files in benchmark folder
+    for image_file in images_files:
+        shutil.copy(image_file, path_benchmark_folder)
+        logger.info(f"Moved image to benchmark folder: {image_file}")
 
 
-# if __name__ == "__main__":
-# download_york_urban_dataset()
-# path_mat_file = (
-#     "/home/adle/Bureau/ablation_tests/1/YorkUrbanDB/P1020171/P1020171LinesAndVP.mat"
-# )
-# show_mat_content(path_mat_file=path_mat_file)
+def clean_working_directory() -> None:
+    """
+    Delete folder LineSegmentAnnotation and all folders called 'P*', plus some specific files/folders.
+    """
+    # Folders to remove (wildcards and explicit names)
+    folders_to_remove = glob.glob(os.path.join(current_folder_path, "P*"))
+    folders_to_remove += [
+        os.path.join(current_folder_path, "LineSegmentAnnotation"),
+        os.path.join(current_folder_path, "pic_only"),
+    ]
+    for folder_path in folders_to_remove:
+        shutil.rmtree(folder_path, ignore_errors=True)
+        logger.info(f"Cleaned working directory: {folder_path}")
+
+    # Files to remove
+    files_to_remove = [
+        "cameraParameters.mat",
+        "ECCV_TrainingAndTestImageNumbers.mat",
+    ]
+    for file_name in files_to_remove:
+        file_path = os.path.join(current_folder_path, file_name)
+        try:
+            os.remove(file_path)
+            logger.info(f"Cleaned working directory: {file_name}")
+        except FileNotFoundError:
+            pass
+
+
+if __name__ == "__main__":
+    download_york_urban_dataset()
+    export_GT_py(str(Path(current_folder_path) / "LineSegmentAnnotation"))
+    extract_images_from_dataset_folders()
+    clean_working_directory()
