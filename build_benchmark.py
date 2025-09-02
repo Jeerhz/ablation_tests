@@ -225,7 +225,7 @@ def symlink_images_to_folder(
 
 
 if __name__ == "__main__":
-    # download_york_urban_dataset()
+    download_york_urban_dataset()
     export_GT_py(str(Path(path_current_folder) / "LineSegmentAnnotation"))
     extract_images_from_dataset_folders(destination_path=path_images_folder)
     symlink_images_to_folder(
@@ -233,3 +233,9 @@ if __name__ == "__main__":
         path_destination_folder=path_benchmark_folder,
     )
     clean_working_directory()
+    # shutil.copytree(
+    #     src=path_benchmark_folder,
+    #     dst=str(Path(path_current_folder) / Path("benchmark_copy")),
+    #     dirs_exist_ok=True,
+    #     symlinks=True,
+    # )
