@@ -3,7 +3,7 @@ import shutil
 import os
 import subprocess
 from loguru import logger
-from build_benchmark import create_specialized_benchmark
+from build_benchmark import create_specialized_benchmark, setup_benchmark_environment
 
 OPTIONS = {
     "n",
@@ -80,22 +80,22 @@ def run_benchmark_in_folder(benchmark_folder: str) -> None:
 
 
 def main():
-    # 1. Setup de l'environnement de benchmark (déjà fait)
-    # setup_benchmark_environment()
+    # 1. Set up benchmark environment
+    setup_benchmark_environment()
 
-    # 2. Générer toutes les combinaisons d'options
+    # 2. Generate all combinations of options
     all_combinations = get_list_combination(OPTIONS)
-    logger.info(f"Nombre de combinaisons: {len(all_combinations)}")
+    logger.info(f"Number of combinations: {len(all_combinations)}")
 
-    # 3. Pour chaque combinaison
+    # 3. For each combination
     for options in all_combinations:
         options_str = "".join(sorted(options))
         benchmark_folder = f"benchmark_{options_str}"
 
-        # Créer le dossier spécialisé
+        # Create specialized folder
         create_specialized_benchmark(options)
 
-        # Exécuter le benchmark
+        # Run benchmark
         run_benchmark_in_folder(benchmark_folder)
 
 

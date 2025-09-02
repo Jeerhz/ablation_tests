@@ -264,21 +264,26 @@ def modify_makefile_for_options(benchmark_folder: str, options: set[str]) -> Non
         logger.error(f"Makefile not found in {benchmark_folder}")
         return
 
-    # Lire le Makefile
+    # Filter empty options
+    filtered_options = [opt for opt in options if opt]
+    options_str = " ".join([f"-{opt}" for opt in sorted(filtered_options)])
+
+    # Load Makefile
     with open(makefile_path, "r") as f:
         lines = f.readlines()
 
-    # Trouver la ligne LSD ?= et la modifier
+    # TChange line LSD ?=
+    muLSD_path = os.path.abspath(os.path.join(benchmark_folder, "../Build/muLSD"))
     for i, line in enumerate(lines):
         if line.startswith("LSD ?="):
-            options_str = " ".join([f"-{opt}" for opt in sorted(options)])
-            lines[i] = f"LSD ?= ../Build/muLSD {options_str}\n"
-            break
+            lines[i] = f"LSD ?= {muLSD_path}\n"
+        if line.startswith("%_seg.txt : %.$(EXT)"):
+            lines[i] = f"%_seg.txt : %.$(EXT)\n\t$(LSD) {options_str} $< $@\n"
 
-    # Écrire le Makefile modifié
+    # Write the modified Makefile
     with open(makefile_path, "w") as f:
         f.writelines(lines)
-    logger.info(f"Makefile modified for options: {options}")
+    logger.info(f"Makefile modified for options: {options_str}")
 
 
 def create_specialized_benchmark(options: set[str]) -> None:
