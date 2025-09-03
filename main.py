@@ -4,6 +4,7 @@ import os
 import subprocess
 from loguru import logger
 from build_benchmark import create_specialized_benchmark, setup_benchmark_environment
+import argparse
 
 OPTIONS = {
     "n",
@@ -71,8 +72,7 @@ def run_benchmark_in_folder(benchmark_folder: str) -> None:
     try:
         os.chdir(benchmark_folder)
         logger.info(f"Running benchmark in {benchmark_folder}")
-        subprocess.run(["make", "clean"], check=True)
-        subprocess.run(["make", "-s", "-j", "2"], check=True)
+        subprocess.run(["make"], check=True)
     except subprocess.CalledProcessError as e:
         logger.error(f"Benchmark failed: {e}")
     finally:
@@ -80,25 +80,44 @@ def run_benchmark_in_folder(benchmark_folder: str) -> None:
 
 
 def main():
-    # 1. Set up benchmark environment
-    setup_benchmark_environment()
+    parser = argparse.ArgumentParser(description="Benchmark ablation tests")
+    parser.add_argument(
+        "--setup", action="store_true", help="Set up benchmark environment"
+    )
+    parser.add_argument(
+        "--clean",
+        action="store_true",
+        help="Clean specialized benchmark folders",
+    )
+    parser.add_argument(
+        "--run",
+        action="store_true",
+        help="Create and run all specialized benchmarks",
+    )
+    args = parser.parse_args()
 
-    # 2. Generate all combinations of options
-    all_combinations = get_list_combination(OPTIONS)
-    logger.info(f"Number of combinations: {len(all_combinations)}")
+    # If no args are provided, run all
+    if not any(vars(args).values()):
+        args.setup = True
+        args.clean = True
+        args.run = True
 
-    # 3. For each combination
-    for options in all_combinations:
-        options_str = "".join(sorted(options))
-        benchmark_folder = f"benchmark_{options_str}"
+    if args.setup:
+        setup_benchmark_environment()
+        logger.info("Benchmark environment set up.")
 
-        # Create specialized folder
-        create_specialized_benchmark(options)
+    if args.clean:
+        clean_specialized_benchmark_in_current_folder()
 
-        # Run benchmark
-        run_benchmark_in_folder(benchmark_folder)
+    if args.run:
+        all_combinations = get_list_combination(OPTIONS)
+        logger.info(f"Number of combinations: {len(all_combinations)}")
+        for options in all_combinations:
+            options_str = "".join(sorted(options))
+            benchmark_folder = f"benchmark_{options_str}"
+            create_specialized_benchmark(options)
+            run_benchmark_in_folder(benchmark_folder)
 
 
 if __name__ == "__main__":
-    # main()
-    clean_specialized_benchmark_in_current_folder()
+    main()

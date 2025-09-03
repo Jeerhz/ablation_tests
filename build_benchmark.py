@@ -141,6 +141,7 @@ def export_GT_py(
         logger.info("Skipping Makefile copy.")
         return None
 
+    # Copy original Makefile to path_destination_folder
     logger.info("Copying Makefile to benchmark folder.")
     makefile_src = os.path.join(path_current_folder, "Makefile")
     makefile_dst = os.path.join(path_destination_folder, "Makefile")
@@ -266,19 +267,28 @@ def modify_makefile_for_options(benchmark_folder: str, options: set[str]) -> Non
 
     # Filter empty options
     filtered_options = [opt for opt in options if opt]
-    options_str = " ".join([f"-{opt}" for opt in sorted(filtered_options)])
+    options_str = "-" + "".join([f"{opt}" for opt in sorted(filtered_options)])
 
     # Load Makefile
     with open(makefile_path, "r") as f:
         lines = f.readlines()
 
-    # TChange line LSD ?=
-    muLSD_path = os.path.abspath(os.path.join(benchmark_folder, "../Build/muLSD"))
+    # Change line LSD ?= Compare ?= to point to the correct path
+    muLSD_path = os.path.abspath(os.path.join(benchmark_folder, "../../Build/muLSD"))
+    LSD_compare_path = os.path.abspath(
+        os.path.join(benchmark_folder, "../../Build/compare_lines")
+    )
+
+    # Ensure parent of muLSD exists
+    os.makedirs(os.path.dirname(muLSD_path), exist_ok=True)
+
     for i, line in enumerate(lines):
         if line.startswith("LSD ?="):
-            lines[i] = f"LSD ?= {muLSD_path}\n"
-        if line.startswith("%_seg.txt : %.$(EXT)"):
-            lines[i] = f"%_seg.txt : %.$(EXT)\n\t$(LSD) {options_str} $< $@\n"
+            lines[i] = f"LSD ?= {muLSD_path} {options_str}\n"
+            logger.debug(f"Updated line {i} in Makefile: {lines[i].strip()}")
+        if line.startswith("COMPARE ?="):
+            lines[i] = f"COMPARE ?= {LSD_compare_path}\n"
+            logger.debug(f"Updated line {i} in Makefile: {lines[i].strip()}")
 
     # Write the modified Makefile
     with open(makefile_path, "w") as f:
