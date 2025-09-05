@@ -13,9 +13,7 @@ import requests
 import zipfile
 from tqdm import tqdm
 
-path_current_folder: str = os.path.abspath(os.getcwd())
-path_benchmark_folder: str = str(Path(path_current_folder) / Path("benchmark"))
-path_images_folder: str = str(Path(path_current_folder) / Path("images"))
+from config import PATH_BENCHMARK_FOLDER, PATH_CURRENT_FOLDER, PATH_IMAGES_FOLDER  # type: ignore
 
 
 # see https://stackoverflow.com/questions/43515481/python-how-to-move-list-of-folders-with-subfolders-to-a-new-directory
@@ -32,9 +30,9 @@ def download_york_urban_dataset() -> None:
     url = "https://www.dropbox.com/scl/fi/lzm76drgp97mmy0fpygz7/YorkUrban-LineSegment.zip?rlkey=emo2b65onipofxikrdzd2kufm&dl=1"
     local_zip_path = "YorkUrban-LineSegment.zip"
 
-    if os.path.isdir(str(Path(path_current_folder) / Path("LineSegmentAnnotation"))):
+    if os.path.isdir(str(Path(PATH_CURRENT_FOLDER) / Path("LineSegmentAnnotation"))):
         logger.warning(
-            f"Folder 'LineSegmentAnnotation' already exists in {path_current_folder}"
+            f"Folder 'LineSegmentAnnotation' already exists in {PATH_CURRENT_FOLDER}"
         )
         return None
 
@@ -57,8 +55,8 @@ def download_york_urban_dataset() -> None:
 
         # Extract the zip file
         with zipfile.ZipFile(local_zip_path, "r") as zip_ref:
-            zip_ref.extractall(path_current_folder)
-        logger.info(f"Extracted dataset to {path_current_folder}")
+            zip_ref.extractall(PATH_CURRENT_FOLDER)
+        logger.info(f"Extracted dataset to {PATH_CURRENT_FOLDER}")
 
         # Optionally remove the zip file after extraction
         os.remove(local_zip_path)
@@ -103,7 +101,7 @@ def show_mat_content(path_mat_file: str) -> None:
 
 def export_GT_py(
     mat_folder: str,
-    path_destination_folder: str = path_benchmark_folder,
+    path_destination_folder: str = PATH_BENCHMARK_FOLDER,
     with_makefile: bool = True,
 ) -> None:
     """
@@ -143,18 +141,18 @@ def export_GT_py(
 
     # Copy original Makefile to path_destination_folder
     logger.info("Copying Makefile to benchmark folder.")
-    makefile_src = os.path.join(path_current_folder, "Makefile")
+    makefile_src = os.path.join(PATH_CURRENT_FOLDER, "Makefile")
     makefile_dst = os.path.join(path_destination_folder, "Makefile")
     if os.path.isfile(makefile_src):
         shutil.copy(makefile_src, makefile_dst)
         logger.info(f"Copied Makefile to {makefile_dst}")
     else:
-        logger.warning(f"Makefile not found in {path_current_folder}")
+        logger.warning(f"Makefile not found in {PATH_CURRENT_FOLDER}")
 
 
 def extract_images_from_dataset_folders(
-    containing_folder_path: str = path_current_folder,
-    destination_path: str = path_benchmark_folder,
+    containing_folder_path: str = PATH_CURRENT_FOLDER,
+    destination_path: str = PATH_BENCHMARK_FOLDER,
 ) -> None:
     """
     Extract images from dataset folders and save them to a benchmark folder.
@@ -188,10 +186,10 @@ def clean_working_directory() -> None:
     Delete folder LineSegmentAnnotation and all folders called 'P*', plus some specific files/folders.
     """
     # Folders to remove (wildcards and explicit names)
-    folders_to_remove = glob.glob(os.path.join(path_current_folder, "P*"))
+    folders_to_remove = glob.glob(os.path.join(PATH_CURRENT_FOLDER, "P*"))
     folders_to_remove += [
-        os.path.join(path_current_folder, "LineSegmentAnnotation"),
-        os.path.join(path_current_folder, "pic_only"),
+        os.path.join(PATH_CURRENT_FOLDER, "LineSegmentAnnotation"),
+        os.path.join(PATH_CURRENT_FOLDER, "pic_only"),
     ]
     for folder_path in folders_to_remove:
         shutil.rmtree(folder_path, ignore_errors=True)
@@ -203,7 +201,7 @@ def clean_working_directory() -> None:
         "ECCV_TrainingAndTestImageNumbers.mat",
     ]
     for file_name in files_to_remove:
-        file_path = os.path.join(path_current_folder, file_name)
+        file_path = os.path.join(PATH_CURRENT_FOLDER, file_name)
         try:
             os.remove(file_path)
             logger.info(f"Cleaned working directory: {file_name}")
@@ -244,14 +242,14 @@ def setup_benchmark_environment() -> None:
     """
     Set up the benchmark environment by creating necessary directories and files.
     """
-    os.makedirs(path_benchmark_folder, exist_ok=True)
-    logger.info(f"Created benchmark folder: {path_benchmark_folder}")
+    os.makedirs(PATH_BENCHMARK_FOLDER, exist_ok=True)
+    logger.info(f"Created benchmark folder: {PATH_BENCHMARK_FOLDER}")
     download_york_urban_dataset()
-    export_GT_py(str(Path(path_current_folder) / "LineSegmentAnnotation"))
-    extract_images_from_dataset_folders(destination_path=path_images_folder)
+    export_GT_py(str(Path(PATH_CURRENT_FOLDER) / "LineSegmentAnnotation"))
+    extract_images_from_dataset_folders(destination_path=PATH_IMAGES_FOLDER)
     symlink_images_to_folder(
-        path_images_folder=path_images_folder,
-        path_destination_folder=path_benchmark_folder,
+        path_images_folder=PATH_IMAGES_FOLDER,
+        path_destination_folder=PATH_BENCHMARK_FOLDER,
     )
     clean_working_directory()
 
@@ -303,10 +301,10 @@ def create_specialized_benchmark(options: set[str]) -> None:
     """
     options_string: str = "".join(sorted(options))
     specialized_benchmark_folder: str = str(
-        Path(path_current_folder) / Path(f"benchmark_{options_string}")
+        Path(PATH_CURRENT_FOLDER) / Path(f"benchmark_{options_string}")
     )
     shutil.copytree(
-        src=path_benchmark_folder,
+        src=PATH_BENCHMARK_FOLDER,
         dst=specialized_benchmark_folder,
         dirs_exist_ok=True,
         symlinks=True,
@@ -316,6 +314,4 @@ def create_specialized_benchmark(options: set[str]) -> None:
     logger.info(f"Created specialized benchmark folder: {specialized_benchmark_folder}")
 
 
-if __name__ == "__main__":
-    setup_benchmark_environment()
-    # create_specialized_benchmark({"n", "p", "f"})
+setup_benchmark_environment()

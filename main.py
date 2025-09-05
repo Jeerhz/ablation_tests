@@ -3,7 +3,7 @@ import shutil
 import os
 import subprocess
 from loguru import logger
-from build_benchmark import create_specialized_benchmark, setup_benchmark_environment
+from build_benchmark import create_specialized_benchmark, setup_benchmark_environment  # type: ignore
 import argparse
 
 OPTIONS = {
