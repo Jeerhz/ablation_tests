@@ -2,6 +2,7 @@ import glob
 import shutil
 import os
 import subprocess
+import sys
 from loguru import logger
 from build_benchmark import create_specialized_benchmark, setup_benchmark_environment  # type: ignore
 import argparse
@@ -95,6 +96,8 @@ def main():
         help="Create and run all specialized benchmarks",
     )
     args = parser.parse_args()
+
+    logger.debug(f"Parsed arguments: {args}")
 
     # If no args are provided, run all
     if not any(vars(args).values()):

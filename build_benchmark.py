@@ -312,6 +312,3 @@ def create_specialized_benchmark(options: set[str]) -> None:
 
     modify_makefile_for_options(specialized_benchmark_folder, options)
     logger.info(f"Created specialized benchmark folder: {specialized_benchmark_folder}")
-
-
-setup_benchmark_environment()
