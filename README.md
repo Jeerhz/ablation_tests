@@ -16,13 +16,13 @@ To install `uv`, follow the [official guide](https://docs.astral.sh/uv/getting-s
 
 ## Scripts Overview
 
-1. **`build_benchmark.py`**
+1. Create benchmark environement used to call muLSDwith: **`build_benchmark.py`**
 
    - Downloads the York Urban Dataset.
    - Converts it into a structured benchmark folder.
    - Creates one benchmark per selected options, putting a `Makefile` inside.
 
-2. **`main.py`**
+2. Call muLSD on all images with: **`main.py`**
 
    - Lists all possible combinations of ablation options.
    - For each combination:
@@ -30,9 +30,15 @@ To install `uv`, follow the [official guide](https://docs.astral.sh/uv/getting-s
      - Creates a specialized benchmark folder.
      - Runs the benchmark using `make`.
 
+3. Compute the metrics and run tests on results with: **`eval.py`**
+
+   - Extract scores from benchmark
+   - Compute averages on combinations or on images
+   - Run Wilcoxon tests for every pair of datasets (with option/without options)
+
 ---
 
-## How to Run
+## How to Run **`main.py`**
 
 ### Step-by-step:
 
@@ -81,7 +87,7 @@ To install `uv`, follow the [official guide](https://docs.astral.sh/uv/getting-s
 These are the option flags used to generate benchmark variants:
 
 ```
-"n", "p", "f", "c", "s", "o", "e", "t", "w"
+"n", "p", "f", "c", "o", "e", "w"
 ```
 
 Refer to ReadMe in MuLSD folder to learn more about them.

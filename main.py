@@ -2,7 +2,6 @@ import glob
 import shutil
 import os
 import subprocess
-import sys
 from loguru import logger
 from build_benchmark import create_specialized_benchmark, setup_benchmark_environment  # type: ignore
 import argparse
@@ -12,10 +11,8 @@ OPTIONS = {
     "p",
     "f",
     "c",
-    "s",
     "o",
     "e",
-    "t",
     "w",
 }
 

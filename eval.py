@@ -2,7 +2,6 @@
 from collections import defaultdict
 import glob
 import os
-from typing import cast
 import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator
 import numpy as np
@@ -70,6 +69,11 @@ def extract_scores_from_benchmarks(
             BenchmarkScore(options=options, scores=benchmark_score.scores)
         )
 
+    if len(all_benchmark_scores) == 0:
+        logger.error(
+            "No benchmark scores found. Are you sure you are in the folder containing benchmark_* folders?"
+        )
+        return []
     logger.success(f"All benchmark extracted, first one: {all_benchmark_scores[0]}")
     return all_benchmark_scores
 
@@ -159,6 +163,10 @@ def test_wilcoxon(
     # Match scores by image name
     scores_with = {s.image_name: s for s in bm_with.scores}
     scores_without = {s.image_name: s for s in bm_without.scores}
+
+    logger.debug(f"Scores with option images: {list(scores_with.keys())}")
+    logger.debug(f"Scores without option images: {list(scores_without.keys())}")
+
     common_images = set(scores_with.keys()).intersection(set(scores_without.keys()))
 
     if not common_images:
@@ -478,6 +486,14 @@ def analyze_option_effects(benchmarks: list[BenchmarkScore]) -> None:
 
     # Plot results
     fig, axes = plt.subplots(len(metrics), 1, figsize=(10, 12), sharex=True)
+    # Find MLSD: benchmark with all options activated
+    all_options_str = "".join(unique_options_list)
+    mlsd_scores: Scores | None = None
+    for bm in benchmarks:
+        if bm.options == all_options_str:
+            mlsd_scores = bm.average_scores()
+            break
+
     for i, metric in enumerate(metrics):
         ax = axes[i]
         x = np.arange(len(unique_options_list))
@@ -518,6 +534,17 @@ def analyze_option_effects(benchmarks: list[BenchmarkScore]) -> None:
                     linewidth=2,
                     label="muLSD",
                 )
+        # Plot horizontal line for MLSD score (all options activated)
+        if mlsd_scores is not None:
+            mlsd_val = getattr(mlsd_scores, metric)
+            if mlsd_val is not None:
+                ax.axhline(
+                    mlsd_val,
+                    color="green",
+                    linestyle="--",
+                    linewidth=2,
+                    label="MLSD (all options)",
+                )
 
         ax.set_title(metric.capitalize())
         ax.set_xticks(x)
@@ -555,8 +582,8 @@ def plot_wilcoxon_results(
     for i, metric in enumerate(metrics):
         ax = axes[i]
         options = list(p_values_dict[metric].keys())
-        p_values = [p_values_dict[metric][opt] for opt in options]
-        ax.bar(options, p_values, color="skyblue")
+        p_values_list = [p_values_dict[metric][opt] for opt in options]
+        ax.bar(options, p_values_list, color="skyblue")
         ax.axhline(0.05, color="red", linestyle="--", label="Significance level (0.05)")
         ax.set_title(f"Wilcoxon p-values for {metric.capitalize()}")
         ax.set_ylabel("p-value")
