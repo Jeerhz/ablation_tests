@@ -96,7 +96,8 @@ def get_benchmark_score_from_options(
 def compare_benchmarks(
     options1: str, options2: str, benchmarks: list[BenchmarkScore]
 ) -> None | list[ImageScores]:
-    """Compare two benchmarks given their options strings."""
+    """Compare two benchmarks given their options strings.
+    Return the difference in absolute value for each image present in both benchmarks and for each metric."""
     logger.info(f"Comparing benchmarks '{options1}' and '{options2}'")
     bm1 = get_benchmark_score_from_options(options1, benchmarks)
     bm2 = get_benchmark_score_from_options(options2, benchmarks)
