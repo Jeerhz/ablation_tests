@@ -32,6 +32,7 @@ To install `uv`, follow the [official guide](https://docs.astral.sh/uv/getting-s
 
 3. Compute the metrics and run tests on results with: **`eval.py`**
 
+   - Run it inside `ablation_tests` folder after creating `benchmark_*` folders.
    - Extract scores from benchmark
    - Compute averages on combinations or on images
    - Run Wilcoxon tests for every pair of datasets (with option/without options)

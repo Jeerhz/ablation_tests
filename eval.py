@@ -342,7 +342,8 @@ def plot_benchmark_ranges(benchmarks: list[BenchmarkScore]) -> None:
         highlighted_options = [
             ("muLSD", "#e74c3c"),  # Red
             ("", "#e74c3c"),
-            ("cfnow", "#2980b9"),  # Blue for cfno
+            ("cfo", "#8e44ad"),  # Purple for cfo
+            ("cefnopw", "#27ae60"),  # Green for cefnopw
         ]
         for opt, color in highlighted_options:
             if opt in values:
@@ -358,7 +359,7 @@ def plot_benchmark_ranges(benchmarks: list[BenchmarkScore]) -> None:
                     label=opt if opt else "MuLSD (no options)",
                 )
                 ax.annotate(
-                    f"{val:.3f}\n({opt})" if (opt and opt != "cfnow") else f"{val:.3f}",
+                    f"{val:.3f}\n({opt})" if (opt and opt != "cfno") else f"{val:.3f}",
                     xy=(val, 0),
                     xytext=(0, -30),
                     textcoords="offset points",
@@ -607,7 +608,7 @@ if __name__ == "__main__":
 
     # Compare max and min benchmarks for 4 metrics
     diff_scores = compare_benchmarks(
-        options1="", options2="cenop", benchmarks=all_benchmark_scores
+        options1="", options2="cfo", benchmarks=all_benchmark_scores
     )
     if diff_scores is None:
         logger.error("Could not compare benchmarks.")
