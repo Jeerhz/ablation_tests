@@ -12,6 +12,18 @@ You can also use `pip` or `poetry` since this project is small.
 
 To install `uv`, follow the [official guide](https://docs.astral.sh/uv/getting-started/installation/).
 
+Create python virtual environment in root folder with:
+
+```bash
+uv venv .venv
+```
+
+And install dependencies with
+
+```bash
+uv sync
+```
+
 ---
 
 ## Scripts Overview
