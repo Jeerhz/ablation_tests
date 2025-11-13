@@ -265,7 +265,10 @@ def modify_makefile_for_options(benchmark_folder: str, options: set[str]) -> Non
 
     # Filter empty options
     filtered_options = [opt for opt in options if opt]
-    options_str = "-" + "".join([f"{opt}" for opt in sorted(filtered_options)])
+    if filtered_options:
+        options_str = "-" + "".join(sorted(filtered_options))
+    else:
+        options_str = ""
 
     # Load Makefile
     with open(makefile_path, "r") as f:
