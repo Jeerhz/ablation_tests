@@ -2,6 +2,7 @@ import glob
 import shutil
 import os
 import subprocess
+import sys
 from loguru import logger
 from build_benchmark import create_specialized_benchmark, setup_benchmark_environment  # type: ignore
 import argparse
@@ -91,12 +92,20 @@ def main():
         action="store_true",
         help="Create and run all specialized benchmarks",
     )
+    parser.add_argument(
+        "--options",
+        nargs="?",
+        const="",
+        default="",
+        type=str,
+        help="To run tests with specific options. \n Available options: n, p, f, c, e, w \n Example: --options npf",
+    )
     args = parser.parse_args()
 
     logger.debug(f"Parsed arguments: {args}")
 
     # If no args are provided, run all
-    if not any(vars(args).values()):
+    if not (args.setup or args.clean or args.run):
         args.setup = True
         args.clean = True
         args.run = True
@@ -109,6 +118,18 @@ def main():
         clean_specialized_benchmark_in_current_folder()
 
     if args.run:
+        if "--options" in sys.argv:
+            selected_options = set(args.options)
+            invalid_options = selected_options - OPTIONS
+            if invalid_options:
+                logger.error(f"Invalid options provided: {invalid_options}")
+                return
+            options_str = "".join(sorted(selected_options))
+            benchmark_folder = f"benchmark_{options_str}"
+            create_specialized_benchmark(selected_options)
+            run_benchmark_in_folder(benchmark_folder)
+            return
+
         all_combinations = get_list_combination(OPTIONS)
         logger.info(f"Number of combinations: {len(all_combinations)}")
         for options in all_combinations:
