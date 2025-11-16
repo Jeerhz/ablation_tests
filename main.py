@@ -11,7 +11,7 @@ from build_benchmark import (  # type: ignore
 )  # type: ignore
 import argparse
 
-from config import OPTIONS  # type: ignore
+from config import BEGIN_T_VALUE, END_T_VALUE, OPTIONS  # type: ignore
 
 
 def get_list_combination(
@@ -129,9 +129,9 @@ def main():
 
         all_combinations = get_list_combination(OPTIONS)
         logger.info(f"Number of combinations: {len(all_combinations)}")
-        create_option_t_benchmarks(begin_value=15, end_value=60)
+        create_option_t_benchmarks(begin_value=BEGIN_T_VALUE, end_value=END_T_VALUE)
 
-        for value in range(15, 61):
+        for value in range(BEGIN_T_VALUE, END_T_VALUE + 1):
             benchmark_folder = f"benchmark_t{value}"
             create_specialized_benchmark(options={"t": value})
             logger.info(f"Running benchmark for option -t {value}")
