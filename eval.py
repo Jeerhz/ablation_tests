@@ -1,3 +1,5 @@
+# author: adle ben salem
+
 # Open all benchmark_ folders
 from collections import defaultdict
 import glob
@@ -494,14 +496,7 @@ def analyze_option_effects(benchmarks: list[BenchmarkScore]) -> None:
             )
 
     # Plot results
-    fig, axes = plt.subplots(len(metrics), 1, figsize=(10, 12), sharex=True)
-    # Find MLSD: benchmark with all options activated
-    all_options_str = "".join(unique_option_letters_list)
-    mlsd_scores: Scores | None = None
-    for bm in benchmarks:
-        if bm.options == all_options_str:
-            mlsd_scores = bm.average_scores()
-            break
+    _, axes = plt.subplots(len(metrics), 1, figsize=(10, 12), sharex=True)
 
     for i, metric in enumerate(metrics):
         ax = axes[i]
@@ -542,17 +537,6 @@ def analyze_option_effects(benchmarks: list[BenchmarkScore]) -> None:
                     linestyle="--",
                     linewidth=2,
                     label="muLSD",
-                )
-        # Plot horizontal line for MLSD score (all options activated)
-        if mlsd_scores is not None:
-            mlsd_val = getattr(mlsd_scores, metric)
-            if mlsd_val is not None:
-                ax.axhline(
-                    mlsd_val,
-                    color="green",
-                    linestyle="--",
-                    linewidth=2,
-                    label="MLSD (all options)",
                 )
 
         ax.set_title(metric.capitalize())

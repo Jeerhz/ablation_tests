@@ -1,3 +1,5 @@
+# author: adle ben salem
+
 # This script assumes that downloading the YorkUrban-LineSegment returns a
 # folder named 'LineSegmentAnnotation' in the current directory.
 
