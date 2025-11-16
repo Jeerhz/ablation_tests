@@ -260,7 +260,7 @@ def modify_makefile_for_options(
     benchmark_folder: str, options: set[str] | dict[str, int]
 ) -> None:
     """
-    Modifie le Makefile pour passer les options au script C++.
+    Change the Makefile to pass the options to the C++ script.
     """
     makefile_path = os.path.join(benchmark_folder, "Makefile")
     if not os.path.isfile(makefile_path):
