@@ -91,6 +91,24 @@ uv sync
    uv run python main.py
    ```
 
+6. **(Optional) Run only one specified benchmark**
+
+   You can only run MuLSD on the specified benchmark folder with `--options`, for instance:
+
+   ```bash
+   uv run python main.py --options cew
+   ```
+
+   will only run the benchmark called `benchmark_cew`
+
+7. **Evaluate and plot the figures**
+
+   From the benchmark scores, we can compute scores with:
+
+   ```bash
+   uv run python eval.py
+   ```
+
 ---
 
 ## Available Options
@@ -98,7 +116,7 @@ uv sync
 These are the option flags used to generate benchmark variants:
 
 ```
-"n", "p", "f", "c", "o", "e", "w"
+"n", "p", "f", "c", "e", "w"
 ```
 
 Refer to ReadMe in MuLSD folder to learn more about them.
