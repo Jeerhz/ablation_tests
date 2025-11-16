@@ -4,17 +4,14 @@ import os
 import subprocess
 import sys
 from loguru import logger
-from build_benchmark import create_specialized_benchmark, setup_benchmark_environment  # type: ignore
+from build_benchmark import (  # type: ignore
+    create_specialized_benchmark,
+    setup_benchmark_environment,
+    create_option_t_benchmarks,
+)  # type: ignore
 import argparse
 
-OPTIONS = {
-    "n",
-    "p",
-    "f",
-    "c",
-    "e",
-    "w",
-}
+from config import OPTIONS  # type: ignore
 
 
 def get_list_combination(
@@ -132,6 +129,14 @@ def main():
 
         all_combinations = get_list_combination(OPTIONS)
         logger.info(f"Number of combinations: {len(all_combinations)}")
+        create_option_t_benchmarks(begin_value=15, end_value=60)
+
+        for value in range(15, 61):
+            benchmark_folder = f"benchmark_t{value}"
+            create_specialized_benchmark(options={"t": value})
+            logger.info(f"Running benchmark for option -t {value}")
+            run_benchmark_in_folder(benchmark_folder)
+
         for options in all_combinations:
             options_str = "".join(sorted(options))
             benchmark_folder = f"benchmark_{options_str}"

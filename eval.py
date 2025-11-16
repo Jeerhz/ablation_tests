@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator
 import numpy as np
 
-from config import PATH_CURRENT_FOLDER  # type: ignore
+from config import OPTIONS, PATH_CURRENT_FOLDER  # type: ignore
 from loguru import logger
 
 from models import BenchmarkScore, Scores, ImageScores  # type: ignore
@@ -243,8 +243,10 @@ def plot_benchmark_ranges(benchmarks: list[BenchmarkScore]) -> None:
     fig.patch.set_facecolor("white")  # Set background to white
     plt.subplots_adjust(wspace=0.3, left=0.05, right=0.95, top=0.9, bottom=0.3)
 
-    # Collect average scores
-    avg_scores_dict = {bm.options: bm.average_scores() for bm in benchmarks}
+    # Collect average scores (we exclude 't' options here)
+    avg_scores_dict = {
+        bm.options: bm.average_scores() for bm in benchmarks if "t" not in bm.options
+    }
 
     for idx, metric in enumerate(metrics):
         ax = axes[idx]
@@ -428,8 +430,11 @@ def analyze_option_effects(benchmarks: list[BenchmarkScore]) -> None:
     unique_options_set = set[str]()
     for bm in benchmarks:
         unique_options_set.update(bm.options)
-    unique_options_list = sorted(unique_options_set)
-    logger.info(f"Unique options found: {unique_options_list}")
+    unique_option_letters_list = [
+        x for x in sorted(unique_options_set) if x in OPTIONS
+    ]  # Exclude t options
+
+    logger.info(f"Unique options found: {unique_option_letters_list}")
 
     # For each option, separate benchmarks into "with" and "without"
     metrics = ["precision", "recall", "f1_score", "iou"]
@@ -443,8 +448,10 @@ def analyze_option_effects(benchmarks: list[BenchmarkScore]) -> None:
             mulsd_scores = bm.average_scores()
             break
 
-    for option in unique_options_list:
+    for option in unique_option_letters_list:
         for bm in benchmarks:
+            if bm.options.startswith("t"):
+                continue  # Skip t options
             avg_scores = bm.average_scores()
             has_option = option in bm.options
             for metric in metrics:
@@ -458,7 +465,7 @@ def analyze_option_effects(benchmarks: list[BenchmarkScore]) -> None:
 
     # Compute mean and std for each option and metric
     summary: dict[str, dict[str, float | None]] = {}
-    for option in unique_options_list:
+    for option in unique_option_letters_list:
         summary[option] = {}
         for metric in metrics:
             with_values = results[option].get(f"{metric}_with", [])
@@ -489,7 +496,7 @@ def analyze_option_effects(benchmarks: list[BenchmarkScore]) -> None:
     # Plot results
     fig, axes = plt.subplots(len(metrics), 1, figsize=(10, 12), sharex=True)
     # Find MLSD: benchmark with all options activated
-    all_options_str = "".join(unique_options_list)
+    all_options_str = "".join(unique_option_letters_list)
     mlsd_scores: Scores | None = None
     for bm in benchmarks:
         if bm.options == all_options_str:
@@ -498,9 +505,9 @@ def analyze_option_effects(benchmarks: list[BenchmarkScore]) -> None:
 
     for i, metric in enumerate(metrics):
         ax = axes[i]
-        x = np.arange(len(unique_options_list))
+        x = np.arange(len(unique_option_letters_list))
         width = 0.35
-        for j, option in enumerate(unique_options_list):
+        for j, option in enumerate(unique_option_letters_list):
             with_mean = summary[option][f"{metric}_with_mean"]
             with_std = summary[option][f"{metric}_with_std"]
             without_mean = summary[option][f"{metric}_without_mean"]
@@ -550,7 +557,7 @@ def analyze_option_effects(benchmarks: list[BenchmarkScore]) -> None:
 
         ax.set_title(metric.capitalize())
         ax.set_xticks(x)
-        ax.set_xticklabels(unique_options_list)
+        ax.set_xticklabels(unique_option_letters_list)
         ax.legend()
     plt.tight_layout()
     out_file = "option_effects.png"
@@ -567,7 +574,9 @@ def plot_wilcoxon_results(
     unique_options_set = set[str]()
     for bm in benchmarks:
         unique_options_set.update(bm.options)
-    unique_options_list = sorted(unique_options_set)
+    unique_options_list = [
+        x for x in sorted(unique_options_set) if "t" not in x
+    ]  # Exclude t options
 
     metrics = ["precision", "recall", "f1_score", "iou"]
     p_values_dict: dict[str, dict[str, float]] = {metric: {} for metric in metrics}
@@ -599,16 +608,50 @@ def plot_wilcoxon_results(
     logger.success(f"Saved Wilcoxon p-values figure to {output_file}")
 
 
+def plot_scores_for_t_values(
+    benchmarks: list[BenchmarkScore], output_file: str = "t_values.png"
+) -> None:
+    """
+    Plot scores for different 't' values.
+    """
+    scores = {}
+    for bm in benchmarks:
+        if bm.options.startswith("t"):
+            t_value = bm.options[1:]  # Extract t value
+            avg_scores: Scores = bm.average_scores()
+            scores[t_value] = avg_scores
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    t_values = sorted(scores.keys(), key=lambda x: int(x))
+    precisions = [scores[t].precision for t in t_values]
+    recalls = [scores[t].recall for t in t_values]
+    f1_scores = [scores[t].f1_score for t in t_values]
+    ious = [scores[t].iou for t in t_values]
+    ax.plot(t_values, precisions, marker="o", label="Precision")
+    ax.plot(t_values, recalls, marker="o", label="Recall")
+    ax.plot(t_values, f1_scores, marker="o", label="F1-Score")
+    ax.plot(t_values, ious, marker="o", label="IoU")
+
+    ax.set_title("Scores for Different 't' Values")
+    ax.set_xlabel("Value of t in degrees")
+    ax.set_ylabel("Score")
+    ax.legend()
+    plt.tight_layout()
+    plt.savefig(output_file, dpi=300, bbox_inches="tight")
+    logger.success(f"Saved 't' values figure to {output_file}")
+
+
 if __name__ == "__main__":
     all_benchmark_scores = extract_scores_from_benchmarks()
     logger.info(f"Number of average scores: {len(all_benchmark_scores)}")
     plot_benchmark_ranges(all_benchmark_scores)
     analyze_option_effects(all_benchmark_scores)
     plot_wilcoxon_results(all_benchmark_scores)
+    plot_scores_for_t_values(all_benchmark_scores)
 
     # Compare max and min benchmarks for 4 metrics
     diff_scores = compare_benchmarks(
-        options1="", options2="cfo", benchmarks=all_benchmark_scores
+        options1="", options2="cf", benchmarks=all_benchmark_scores
     )
     if diff_scores is None:
         logger.error("Could not compare benchmarks.")

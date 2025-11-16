@@ -254,7 +254,9 @@ def setup_benchmark_environment() -> None:
     clean_working_directory()
 
 
-def modify_makefile_for_options(benchmark_folder: str, options: set[str]) -> None:
+def modify_makefile_for_options(
+    benchmark_folder: str, options: set[str] | dict[str, int]
+) -> None:
     """
     Modifie le Makefile pour passer les options au script C++.
     """
@@ -264,11 +266,15 @@ def modify_makefile_for_options(benchmark_folder: str, options: set[str]) -> Non
         return
 
     # Filter empty options
-    filtered_options = [opt for opt in options if opt]
-    if filtered_options:
-        options_str = "-" + "".join(sorted(filtered_options))
+    if type(options) is dict:
+        option_value = options["t"]
+        options_str = f"-t {option_value}"
     else:
-        options_str = ""
+        filtered_options = [opt for opt in options if opt]
+        if filtered_options:
+            options_str = "-" + "".join(sorted(filtered_options))
+        else:
+            options_str = ""
 
     # Load Makefile
     with open(makefile_path, "r") as f:
@@ -297,15 +303,33 @@ def modify_makefile_for_options(benchmark_folder: str, options: set[str]) -> Non
     logger.info(f"Makefile modified for options: {options_str}")
 
 
-def create_specialized_benchmark(options: set[str]) -> None:
+def create_option_t_benchmarks(begin_value: int, end_value: int) -> None:
+    """
+    Create specialized benchmark folders for option 't' enabled and disabled.
+    We call option 't' with a numeric value.
+    Create benchmark folders for each value in the specified range.
+    """
+    for value in range(begin_value, end_value + 1):
+        create_specialized_benchmark(options={"t": value})
+
+
+def create_specialized_benchmark(options: set[str] | dict[str, int]) -> None:
     """
     Create a specialized benchmark folder based on the provided options.
     This is where we will run and store MuLSD results on benchmark
     """
-    options_string: str = "".join(sorted(options))
+    if type(options) is dict:
+        options_string = f"t{options['t']}"
+    else:
+        options_string = "".join(sorted(options))
     specialized_benchmark_folder: str = str(
         Path(PATH_CURRENT_FOLDER) / Path(f"benchmark_{options_string}")
     )
+    if os.path.isdir(specialized_benchmark_folder):
+        logger.info(
+            f"Specialized benchmark folder already exists: {specialized_benchmark_folder}"
+        )
+        return
     shutil.copytree(
         src=PATH_BENCHMARK_FOLDER,
         dst=specialized_benchmark_folder,
